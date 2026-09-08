@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import "./App.css";
@@ -15,11 +15,29 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   // const [selectedUserId, setSelectedUserId] = useState("all");
 
+  const activeRequest = useRef(null); // Ref to hold the active fetch request
+
+  //Anytime I fetch posts, cancel any previous unfinished request first, then start a fresh request.
+  //if the componenent leaves the screen before the request finishes, cancel it too, so react will not try to update state on a dead compononent. This is a common pattern to avoid memory leaks and unnecessary state updates in React.
+
   const fetchPosts = useCallback(async () => {
+    activeRequest.current?.abort(); // Cancel any previous request
+
+    // AbortController na browser feature that helps you cancel a fetch request. We create a new controller for each request,and pass its signal to the fetch call. If we need to cancel the request, we call abort() on the controller.
+
+    const controller = new AbortController();
+    activeRequest.current = controller; // Store the current controller in the ref
     try {
+
+
+      //set loading and clear old error before starting the fetch.
       setLoading(true);
       setError("");
-      const response = await fetch(POSTS_API_URL);
+      const response = await fetch(POSTS_API_URL, { 
+        signal: controller.signal, //pass signal to the fetch call.
+        headers: {"Accept": "application/json", //use acccept because we are fetching.
+        },
+       });
       if (!response.ok) {
         throw new Error("Failed to fetch posts");
       }
@@ -32,6 +50,7 @@ function App() {
       setLoading(false);
     }
   }, []);
+
   useEffect(() => {
     fetchPosts();
   }, []);

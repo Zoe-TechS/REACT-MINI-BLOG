@@ -1,7 +1,7 @@
 import LoadingState from "./LoadingState";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
-function StatusMessage({ loading, error, onRetry }) {
+function StatusMessage({ loading, error, reloadPosts }) {
   if (loading) return <LoadingState />;
   if (error) {
     return (
@@ -11,7 +11,7 @@ function StatusMessage({ loading, error, onRetry }) {
         </span>
         <h3>We couldn&apos;t load the posts</h3>
         <p>{error}</p>
-        <button className="status-button" type="button" onClick={onRetry}>
+        <button className="status-button" type="button" onClick={reloadPosts}>
           <RefreshCw size={16} aria-hidden="true" />
           Try again
         </button>

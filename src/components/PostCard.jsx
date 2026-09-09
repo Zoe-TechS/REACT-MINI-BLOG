@@ -1,6 +1,6 @@
 import { ArrowUpRight, UserRound } from "lucide-react";
 
-function PostCard({ post }) {
+function PostCard({ post, viewSinglePost }) {
   return (
     <article className="post-card">
       <div className="post-card-topline">
@@ -21,7 +21,7 @@ function PostCard({ post }) {
       <button
         className="details-button"
         type="button"
-        // onClick={() => onViewPost(post)}
+        onClick={() => viewSinglePost(post)}
         aria-label={`View details for ${post.title}`}
       >
         Read post

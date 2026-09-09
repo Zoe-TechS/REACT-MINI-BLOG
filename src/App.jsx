@@ -4,7 +4,7 @@ import SearchBar from "./components/SearchBar";
 import "./App.css";
 // import { Search } from "lucide-react";
 import PostGrid from "./components/PostGrid";
-import LoadingState from "./components/LoadingState";
+import StatusMessage from "./components/StatusMessage";
 // import { Filter, RotateCcw } from "lucide-react";
 
 const POSTS_API_URL = import.meta.env.VITE_POSTS_API_URL; // Use the environment variable for the API URL
@@ -28,24 +28,27 @@ function App() {
     const controller = new AbortController();
     activeRequest.current = controller; // Store the current controller in the ref
     try {
-
-
       //set loading and clear old error before starting the fetch.
       setLoading(true);
       setError("");
-      const response = await fetch(POSTS_API_URL, { 
+      const response = await fetch(POSTS_API_URL, {
         signal: controller.signal, //pass signal to the fetch call.
-        headers: {"Accept": "application/json", //use acccept because we are fetching.
+        headers: {
+          Accept: "application/json", //use acccept because we are fetching.
         },
-       });
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch posts");
       }
       const data = await response.json();
       setPosts(data);
       console.log("Fetched posts:", data); // Log the fetched posts for debugging
-    } catch (error) {
-      setError(error.message);
+    } catch (requestError) {
+      if (requestError.name !== "AbortError") {
+        setError(
+          requestError.message || "Something went wrong. Please try again",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -71,31 +74,21 @@ function App() {
               <p className="eyebrow">Explore the collection</p>
               <h2>Find something worth reading</h2>
             </div>
-            {/* {hasActiveFilters && (
-              <button
-              className="clear-button"
-              type="button"
-              onClick={clearFilters}
-              >
-                <RotateCcw size={15} aria-hidden="true"/>
-                Reset filters
-              </button>
-            )} */}
           </div>
 
           <div className="controls">
             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
           </div>
 
-          {error ? (
-            <div className="error-message" role="alert">
-              {error}
-            </div>
-          ) : (
-            <section id="posts" aria-label="posts-heading">
-              {loading ? <LoadingState /> : <PostGrid posts={posts} />}
-            </section>
-          )}
+          <section id="posts" aria-label="posts-heading">
+            <StatusMessage
+              loading={loading}
+              error={error}
+              onRetry={fetchPosts}
+            />
+
+            {!error && <PostGrid posts={posts} />}
+          </section>
         </section>
       </main>
     </div>

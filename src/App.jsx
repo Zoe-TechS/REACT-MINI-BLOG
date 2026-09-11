@@ -2,7 +2,7 @@ import { useState } from "react";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import "./App.css";
-// import { Search } from "lucide-react";
+// import { RefreshCw, Search } from "lucide-react";
 import PostGrid from "./components/PostGrid";
 import StatusMessage from "./components/StatusMessage";
 import usePosts from "./hooks/usePosts";
@@ -12,13 +12,32 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const { posts, loading, error, fetchPosts } = usePosts();
 
+  const handleRefresh = () => {
+    fetchPosts();
+  };
+
+  const filteredPosts = posts.filter((post) => {
+    const search = searchTerm.trim().toLowerCase();
+
+    const title = post.title.toLowerCase();
+    const body = post.body.toLowerCase();
+
+    const matchesSearch = title.includes(search) || body.includes(search);
+
+    return matchesSearch;
+  });
+
   return (
     <div className="App">
       <a className="skip-link" href="#posts">
         Skip to posts
       </a>
       <main className="app-container ">
-        <Header displayedCount={20} totalCount={100} lastUpdated="2023-10-01" />
+        <Header
+          displayedCount={filteredPosts.length}
+          totalCount={posts.length}
+          lastUpdated="2023-10-01"
+        />
 
         {/* SEARCH CARD */}
 
@@ -32,6 +51,13 @@ function App() {
 
           <div className="controls">
             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+            <button
+              className="status-button"
+              type="button"
+              onClick={handleRefresh}
+            >
+              {loading ? "Refreshing..." : "Refresh Posts"}
+            </button>
           </div>
 
           <section id="posts" aria-label="posts-heading">
@@ -41,7 +67,7 @@ function App() {
               reloadPosts={fetchPosts}
             />
 
-            {!error && <PostGrid posts={posts} />}
+            {!error && <PostGrid posts={filteredPosts} />}
           </section>
         </section>
       </main>

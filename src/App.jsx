@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import "./App.css";
@@ -6,26 +6,41 @@ import "./App.css";
 import PostGrid from "./components/PostGrid";
 import StatusMessage from "./components/StatusMessage";
 import usePosts from "./hooks/usePosts";
+import FilterBar from "./components/FilterBar";
 // import { Filter, RotateCcw } from "lucide-react";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("all");
   const { posts, loading, error, fetchPosts } = usePosts();
 
   const handleRefresh = () => {
     fetchPosts();
   };
 
-  const filteredPosts = posts.filter((post) => {
-    const search = searchTerm.trim().toLowerCase();
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) => {
+      const search = searchTerm.trim().toLowerCase();
 
-    const title = post.title.toLowerCase();
-    const body = post.body.toLowerCase();
+      const title = post.title.toLowerCase();
+      const body = post.body.toLowerCase();
 
-    const matchesSearch = title.includes(search) || body.includes(search);
+      const matchesSearch = title.includes(search) || body.includes(search);
+      
+      const matchesUser =
+        selectedUserId === "all" || post.userId === Number(selectedUserId);
 
-    return matchesSearch;
-  });
+      return matchesSearch && matchesUser;
+    });
+  }, [posts, searchTerm, selectedUserId]);
+
+  const userIds = useMemo(
+    () =>
+      [...new Set(posts.map((post) => post.userId))].sort(
+        (first, second) => first - second,
+      ),
+    [posts],
+  );
 
   return (
     <div className="App">
@@ -51,6 +66,11 @@ function App() {
 
           <div className="controls">
             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+            <FilterBar
+              userIds={userIds}
+              selectedUserId={selectedUserId}
+              onUserChange={setSelectedUserId}
+            />
             <button
               className="status-button"
               type="button"

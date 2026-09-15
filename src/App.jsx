@@ -7,11 +7,13 @@ import PostGrid from "./components/PostGrid";
 import StatusMessage from "./components/StatusMessage";
 import usePosts from "./hooks/usePosts";
 import FilterBar from "./components/FilterBar";
+import PostModal from "./components/PostModal";
 // import { Filter, RotateCcw } from "lucide-react";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("all");
+  const [selectedPost, setSelectedPost] = useState(null);
   const { posts, loading, error, fetchPosts } = usePosts();
 
   const handleRefresh = () => {
@@ -26,7 +28,7 @@ function App() {
       const body = post.body.toLowerCase();
 
       const matchesSearch = title.includes(search) || body.includes(search);
-      
+
       const matchesUser =
         selectedUserId === "all" || post.userId === Number(selectedUserId);
 
@@ -87,10 +89,18 @@ function App() {
               reloadPosts={fetchPosts}
             />
 
-            {!error && <PostGrid posts={filteredPosts} />}
+            {!error && (
+              <PostGrid
+                posts={filteredPosts}
+                viewSinglePost={setSelectedPost}
+              />
+            )}
           </section>
         </section>
       </main>
+      {selectedPost && (
+        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </div>
   );
 }
